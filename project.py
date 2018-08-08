@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect,jsonify, url_for, fl
 app = Flask(__name__)
 
 from sqlalchemy import create_engine, asc
+from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Restaurant, MenuItem
 
@@ -9,10 +10,11 @@ from database_setup import Base, Restaurant, MenuItem
 #Connect to Database and create database session
 engine = create_engine('sqlite:///restaurantmenu.db')
 Base.metadata.bind = engine
+session = scoped_session(sessionmaker(bind=engine))
 
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
-
+@app.teardown_request
+def remove_session(ex=None):
+    session.remove()
 
 #JSON APIs to view Restaurant Information
 @app.route('/restaurant/<int:restaurant_id>/menu/JSON')
